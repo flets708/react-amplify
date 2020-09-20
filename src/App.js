@@ -3,7 +3,8 @@ import Amplify, { API, graphqlOperation } from 'aws-amplify';
 import { createTodo } from './graphql/mutations'
 import { listTodos } from './graphql/queries'
 import awsExports from "./aws-exports";
-// import { withAuthenticator } from "@aws-amplify/ui-react";
+import { AmplifyAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
+import { AuthState, onAuthUIStateChange } from '@aws-amplify/ui-components';
 
 Amplify.configure(awsExports)
 
@@ -12,9 +13,13 @@ const initialState = {name: '', description: ''}
 const App = () => {
   const [formState, setFormState] = useState(initialState);
   const [todos, setTodos] = useState([])
+  const [authState, setAuthState] = useState()
 
   useEffect(() => {
     fetchTodos()
+    return onAuthUIStateChange((nextAuthState, authData) => {
+      setAuthState(nextAuthState)
+    })
   }, [])
 
   function setInput(key, value) {
@@ -41,7 +46,7 @@ const App = () => {
     }
   }
 
-  return (
+  return authState === AuthState.SignedIn ? (
     <div style={styles.container}>
       <h2>Amplify Todos</h2>
       <input
@@ -65,7 +70,11 @@ const App = () => {
           </div>
         ))
       }
+      <br/>
+      <AmplifySignOut/>
     </div>
+  ) : (
+    <AmplifyAuthenticator/>
   )
 
 }
